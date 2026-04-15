@@ -1,14 +1,18 @@
-FROM node:18-alpine
+﻿FROM node:18-alpine
 
 WORKDIR /app
 
-# Копируем и устанавливаем зависимости
+# Копируем файлы зависимостей
 COPY package*.json ./
-RUN npm ci --only=production
+
+# Устанавливаем зависимости (используем install вместо ci)
+RUN npm install --production
 
 # Копируем исходный код
-COPY server.js .
+COPY . .
 
+# Открываем порт
 EXPOSE 8080
 
+# Запускаем приложение
 CMD ["node", "server.js"]
