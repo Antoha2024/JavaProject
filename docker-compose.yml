@@ -1,7 +1,7 @@
-version: '3.8'
+﻿version: '3.8'
 
 services:
-  # ==================== БАЗЫ ДАННЫХ И БРОКЕРЫ ====================
+  # ==================== DATABASES AND MESSAGE BROKER ====================
   
   postgres:
     image: postgres:15
@@ -48,7 +48,7 @@ services:
     networks:
       - microservices-net
 
-  # ==================== ИНФРАСТРУКТУРНЫЕ СЕРВИСЫ ====================
+  # ==================== INFRASTRUCTURE SERVICES ====================
 
   discovery-server:
     build:
@@ -56,11 +56,11 @@ services:
       dockerfile: Dockerfile
     container_name: discovery-server
     ports:
-      - "8765:8765"
+      - "8761:8761"
     networks:
       - microservices-net
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8765/actuator/health"]
+      test: ["CMD", "wget", "--spider", "http://localhost:8761/actuator/health"]
       interval: 15s
       timeout: 5s
       retries: 5
@@ -73,18 +73,14 @@ services:
     depends_on:
       discovery-server:
         condition: service_healthy
-      user-service:
-        condition: service_started
-      notification-service:
-        condition: service_started
     ports:
       - "8080:8080"
     networks:
       - microservices-net
     environment:
-      DISCOVERY_URL: "http://discovery-server:8765"
+      DISCOVERY_URL: "http://discovery-server:8761"
 
-  # ==================== ВАШИ МИКРОСЕРВИСЫ ====================
+  # ==================== MICROSERVICES ====================
 
   user-service:
     build:
@@ -108,7 +104,7 @@ services:
       DB_USERNAME: postgres
       DB_PASSWORD: password
       KAFKA_BOOTSTRAP: "kafka:9092"
-      DISCOVERY_URL: "http://discovery-server:8765"
+      DISCOVERY_URL: "http://discovery-server:8761"
 
   notification-service:
     build:
@@ -127,7 +123,7 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: docker
       KAFKA_BOOTSTRAP: "kafka:9092"
-      DISCOVERY_URL: "http://discovery-server:8765"
+      DISCOVERY_URL: "http://discovery-server:8761"
 
 networks:
   microservices-net:
